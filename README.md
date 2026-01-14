@@ -10,159 +10,120 @@ A [Typst](https://typst.app/) template for PhD and Master's theses conforming to
 
 This Typst template recreates the formatting of the [Dartmouth PhD Thesis LaTeX template](https://www.overleaf.com/latex/templates/dartmouth-phd-thesis/hdztkxftnsmd) originally created by F. G. Dorais (2007), updated for 2017 guidelines by David Freund and Daryl DeFord, and later updated by Marek Svoboda (2021). Like the original, this template is distributed under the [LaTeX Project Public License](http://www.latex-project.org/lppl.txt) (LPPL).
 
-The template supports:
+The template supports the standard PhD/Master's thesis title page format. Engineering Sciences and MALS variants are not implemented.
 
-- Standard PhD/Master's thesis title page format
-- Engineering Sciences variant title page
-- MALS (Master of Arts in Liberal Studies) variant title page
-- Proper margin, font, and spacing requirements
-- Roman numeral pagination for front matter
-- Arabic numeral pagination for main content
-- Chapter and section headers with automatic formatting
-- Appendix support with letter numbering (A, B, C...)
-
-**Important**: Formatting requirements may change. Always verify your thesis meets current Dartmouth Graduate School requirements before submission.
+**Important:** Formatting requirements may change. Always verify your thesis meets current Dartmouth Graduate School requirements before submission.
 
 ## Official Guidelines
 
 - [Thesis Submission Information](https://graduate.dartmouth.edu/academics/graduate-registrar/information-submission-thesis-dissertation-or-course-track-fulfillments)
 - [Thesis Formatting Guidelines (PDF)](https://graduate.dartmouth.edu/sites/graduate_studies.prod/files/graduate_studies/wysiwyg/thesis_guidelines_4.pdf)
 
-## Usage
+## Template Files
 
-### Quick Start
+- [`main.typ`](main.typ) — Typst entry point
+- [`dcthesis.typ`](dcthesis.typ) — Template functions
+- [`references.bib`](references.bib) — Example BibLaTeX bibliography
+- [`sections/`](sections/) — Chapter files included by `main.typ`
+- [`VSCProject.code-workspace`](VSCProject.code-workspace) — VS Code workspace configuration
 
-1. Clone or download this repository
-2. Edit `main.typ` with your thesis metadata (title, author, committee, etc.)
-3. Add your chapters in `sections/`
-4. Compile with Typst
-
-### Compilation
-
-Using the [Typst CLI](https://github.com/typst/typst):
-
-```shell
-typst compile --font-path fonts main.typ thesis.pdf
-```
-
-For continuous compilation during editing:
-
-```shell
-typst watch --font-path fonts main.typ thesis.pdf
-```
-
-## Fonts
-
-This template uses [New Computer Modern](https://ctan.org/pkg/newcomputermodern) fonts, which are included in the `fonts/` directory. These fonts are distributed under the [GUST Font License](https://www.gust.org.pl/projects/e-foundry/licenses) (GFL), which is based on the LaTeX Project Public License.
-
-The `--font-path fonts` flag tells Typst where to find the fonts. Alternatively, install them system-wide:
-
-- **macOS** (Homebrew): `brew install --cask font-new-computer-modern`
-- **macOS** (manual): Double-click each `.otf` file and click "Install Font"
-- **Linux**: Copy fonts to `~/.local/share/fonts/` and run `fc-cache -fv`
-- **Windows**: Right-click each `.otf` file and select "Install"
-
-If fonts are installed system-wide, you can omit the `--font-path` flag.
-
-**Download fonts**: If you need to obtain the fonts separately, download from [CTAN](https://www.ctan.org/pkg/newcomputermodern) or the [official release page](https://download.gnu.org.ua/release/newcm/).
-
-## VS Code Setup
-
-The included `VSCProject.code-workspace` file configures Visual Studio Code for Typst development:
-
-1. Open VS Code
-2. File → Open Workspace from File...
-3. Select `VSCProject.code-workspace`
-
-The workspace configures:
-
-- [Tinymist](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) as the Typst formatter and language server
-- Typstyle formatting mode
-- Word separators for better navigation in Typst files
-- Spell checking with cSpell (ignores Typst-specific patterns)
-
-**Recommended Extensions** (will be suggested when opening the workspace):
-
-- [Tinymist Typst](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) - Language server with live preview
-- [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) - Spell checking
-
-To configure Tinymist to use the local fonts directory, add to your VS Code settings:
-
-```json
-"tinymist.fontPaths": ["fonts"]
-```
+Compiled output: [`_output/typst.pdf`](_output/typst.pdf)
 
 ## Template Parameters
 
-The `dcthesis()` function in `dcthesis.typ` accepts these parameters:
+The `dcthesis()` function accepts these parameters:
 
-### Document Metadata
+- **`title`** (content | string): Thesis title
+- **`author`** (content | string): Author name
+- **`degree`** (content | string): Degree type (default: "Doctor of Philosophy")
+- **`field`** (content | string): Field of study
+- **`date`** (content | string): Month and year of defense
+- **`advisor`** (content | string): Thesis advisor (chair)
+- **`examiner-1`** (content | string): Committee member 1
+- **`examiner-2`** (content | string): Committee member 2
+- **`examiner-3`** (content | string): Committee member 3
+- **`dean`** (content | string): Dean name
+- **`dean-title`** (content | string): Dean title
 
-| Parameter | Type    | Description                                   |
-| --------- | ------- | --------------------------------------------- |
-| `title`   | content | Thesis title                                  |
-| `author`  | string  | Author name                                   |
-| `degree`  | string  | Degree type (default: "Doctor of Philosophy") |
-| `field`   | string  | Field of study                                |
-| `date`    | string  | Month and year of defense                     |
+**Optional Parameters**
 
-### Committee
+- **`copyright`** (dictionary | none): Copyright info with `year` and `name` keys (`name` defaults to `author`)
+- **`hyphenate`** (boolean): Enable automatic hyphenation (default: true); set to false for easier proofreading
 
-| Parameter    | Type    | Description                               |
-| ------------ | ------- | ----------------------------------------- |
-| `advisor`    | content | Thesis advisor (chair)                    |
-| `examiner-1` | content | Committee member 1                        |
-| `examiner-2` | content | Committee member 2                        |
-| `examiner-3` | content | Committee member 3                        |
-| `dean`       | content | Dean name (default: "F. Jon Kull, Ph.D.") |
-| `dean-title` | content | Dean title                                |
+## Local Usage
 
-### Options
+### VS Code Setup
 
-| Parameter        | Type    | Description                                              |
-| ---------------- | ------- | -------------------------------------------------------- |
-| `variant`        | string  | Title page variant: "standard", "engineering", or "mals" |
-| `copyright`      | boolean | Include copyright page (default: false)                  |
-| `copyright-name` | string  | Name for copyright (defaults to author)                  |
-| `copyright-year` | string  | Year for copyright (defaults to current year)            |
+If you're using Typst locally, the [Tinymist Typst VS Code Extension](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) (the [Tinymist](https://myriad-dreamin.github.io/tinymist/) extension for [Visual Studio Code](https://code.visualstudio.com/)) provides an integrated language server with live preview, semantic highlighting, hover documentation, and linting.
 
-## Document Structure
+The included `VSCProject.code-workspace` file offers a starter environment for working with Typst. To use it:
 
-```typst
-#import "dcthesis.typ": *
+- Open `VSCProject.code-workspace` (or File → Open Workspace from File...)
+- Accept the invitation to install the recommended extensions, which include
+  - [Tinymist](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)
+  - [typstyle](https://typstyle-rs.github.io/typstyle/) for code formatting
+  - [cSpell](https://cspell.org/) for basic spell checking
+- Open `main.typ` and select `Typst Preview: Preview Opened File` from the VS Code command menu
 
-#show: dcthesis.with(
-  title: [Your Thesis Title],
-  author: "Your Name",
-  // ... other parameters
-)
+### Fonts
 
-#frontmatter[
-  = Abstract
-  Your abstract here.
+This template requires [New Computer Modern](https://ctan.org/pkg/newcm) fonts. These are included in this repository in the [`fonts/`](fonts/) folder.
 
-  = Preface
-  Acknowledgments here.
+You can use these fonts for this project without installing them system wide by passing the `fonts` directory path to the Typst CLI (using `--font-path`) or Tinymist (using `tinymist.fontPaths`).
 
-  #outline(title: "Contents", indent: auto, depth: 3)
-]
+Alternatively, you can install the fonts system-wide:
 
-#mainmatter[
-  #include "sections/ch-1.typ"
-  #include "sections/ch-2.typ"
+<details>
+  <summary>Install fonts system-wide</summary>
+- **macOS**
+  - If you have Homebrew installed, run `brew install font-new-computer-modern`
+  - Or, drag the `.otf` files into the "Font Book" application
+  - Or, double-click the `.otf` files and select "Install Font"
+- **Linux**: Copy fonts to `~/.local/share/fonts/` and run `fc-cache -fv`
+- **Windows**: Right-click the `.otf` files and select "Install"
+</details>
 
-  #show: appendices
-  #include "sections/supp-1.typ"
-]
+### Compilation
 
-#backmatter[
-  #bibliography("references.bib", style: "apa", title: "References")
-]
+To compile a PDF using the [Typst CLI](https://github.com/typst/typst):
+
+```shell
+typst compile --font-path fonts --pdf-standard a-3u main.typ
 ```
 
-## Per-Chapter Bibliographies
+If the required fonts are installed system-wide, you can omit `--font-path`. Otherwise, use `--font-path fonts` to specify the directory containing the OTF files. With the [Tinymist Typst VS Code Extension](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist), specify the font directory with the `tinymist.fontPaths` setting (see the Tinymist [documentation](https://myriad-dreamin.github.io/tinymist/config/vscode.html) for details).
 
-For theses requiring separate bibliographies at the end of each chapter (common for article-based dissertations), use the [alexandria](https://typst.app/universe/package/alexandria/) package.
+Specifying a [PDF standard](https://typst.app/docs/reference/pdf/#pdf-standards) like `--pdf-standard a-3u` is optional but ensures that the PDF text is searchable and accessible.
+
+For continuous compilation during editing, use watch mode:
+
+```shell
+typst watch --font-path fonts main.typ
+```
+
+If you're using the Tinymist extension, you can export a PDF from VS Code.
+
+## Template Features
+
+### Short Titles for Headers
+
+When a heading is too long for the running header, use `short()` to provide an abbreviated version:
+
+```typst
+#import "dcthesis.typ": short
+
+#short[Methods]
+== Methodological Approaches to Investigating Complex Phenomena
+```
+
+The short title appears in the page header while the full title appears in the document body.
+
+### Per-Chapter Bibliographies
+
+For theses requiring separate bibliographies at the end of each chapter (common for article-based dissertations), use the [Alexandria](https://typst.app/universe/package/alexandria/) package.
+
+<details>
+<summary>Alexandria usage</summary>
 
 Alexandria allows multiple independent bibliographies in a single document. Each chapter declares a unique prefix, and citations include that prefix to associate them with the correct bibliography.
 
@@ -190,20 +151,25 @@ Following established procedures @ch2:protocol2021.
 
 The `.bib` file uses standard keys (e.g., `smith2020`), but citations prepend the chapter prefix (e.g., `@ch1:smith2020`). The same entry can appear in multiple chapter bibliographies.
 
-See the [alexandria documentation](https://typst.app/universe/package/alexandria/) for details on citation grouping, style options, and filtering.
+See the Alexandria documentation for details on citation grouping, style options, and filtering.
+
+</details>
 
 ## Requirements
 
 - [Typst](https://typst.app/) v0.14.0 or later
-  - Install via `brew install typst` (macOS) or see [installation guide](https://github.com/typst/typst#installation)
-- New Computer Modern fonts (included in `fonts/` directory)
+  - NB the Tinymist extension packages Typst so you don't need to install Typst separately if you use Tinymist. (However, it is often useful to also have the Typst CLI installed.)
+  - See the Typst [installation guide](https://github.com/typst/typst#installation)
+    - (On macOS, you can install via [Homebrew](https://brew.sh/): `brew install typst`)
+- [New Computer Modern](https://ctan.org/pkg/newcm) fonts
+  - Install system-wide or use the `.otf` files included in the [`fonts/`](fonts/) folder of this repository
 
 ## Credits
 
-- Original LaTeX template: F. G. Dorais (2007)
-- 2017 guidelines update: David Freund and Daryl DeFord
-- 2021 update: Marek Svoboda
-- Typst implementation: Dae Houlihan
+- Original LaTeX template ([Overleaf](https://www.overleaf.com/latex/templates/dartmouth-phd-thesis/hdztkxftnsmd))
+  - F. G. Dorais (2007)
+  - David Freund and Daryl DeFord: guidelines update (2017)
+  - Marek Svoboda: update (2021)
 
 ## Author
 

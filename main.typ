@@ -1,21 +1,29 @@
+//
+// Dartmouth College Thesis Template in Typst
+//
+
 #import "dcthesis.typ": *
 
+#let hyphenate = true // Set to false to disable hyphenation (useful for proofreading)
+
 #show: dcthesis.with(
-  title: [Pretty Okay: A summary of technological methods for determining the veracity of certain obnoxious phrases],
-  author: "The Myth",
+  title: [A Study in Typst Thesis Templates],
+  author: [Author Name],
   degree: "Doctor of Philosophy",
-  field: "Quantitative Biomedical Sciences",
+  field: "Psychological and Brain Sciences",
   school: "Guarini School of Graduate and Advanced Studies",
   date: "December 2026",
 
-  advisor: [LGF],
-  examiner-1: [The Mustache],
-  examiner-2: [The Big Cheese],
-  examiner-3: "Totally Real Subfield",
+  advisor: [Advisor One Name],
+  examiner-1: [Advisor Two Name],
+  examiner-2: [Advisor Three Name],
+  examiner-3: [Advisor Four Name],
   dean: [F. Jon Kull, Ph.D.],
   dean-title: "Dean of the Guarini School of Graduate and Advanced Studies",
 
-  // copyright: (year: 2026, name: "Your Name"),  // Uncomment to add copyright page
+  // copyright: (year: 2026),  // Uncomment to add copyright page
+
+  hyphenate: hyphenate,
 )
 
 // ============================================================================
@@ -71,7 +79,6 @@
 // BACK MATTER
 // ============================================================================
 
-// Back matter
 #backmatter[
   #bibliography("references.bib", style: "apa", title: "References")
 ]

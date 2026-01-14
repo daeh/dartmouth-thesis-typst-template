@@ -8,7 +8,7 @@ This template uses the APA citation style with a single bibliography at the end 
 
 If you prefer separate bibliographies at the end of each chapter, use the #link("https://typst.app/universe/package/alexandria/", [alexandria]) package.
 
-The Typst bibliography function use Hayagriva as its backend. References can be passed as a path to a BibLaTeX `.bib` file or a Hayagriva `.yaml`/`.yml` file.
+The Typst bibliography function uses Hayagriva as its backend. References can be passed as a path to a BibLaTeX `.bib` file or a Hayagriva `.yaml`/`.yml` file.
 
 === Parenthetical Citations
 

@@ -16,7 +16,7 @@
       "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
     },
     "tinymist.formatterMode": "typstyle",
-    "tinymist.fontPaths": [],
+    "tinymist.fontPaths": ["${workspaceFolder}/fonts"],
     "cSpell.words": [],
     "cSpell.languageSettings": [
       {

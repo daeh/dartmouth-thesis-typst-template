@@ -1,3 +1,3 @@
-= Stuff about stuff
+= Name of an Appendix
 
-This is a sample.
+#lorem(80)

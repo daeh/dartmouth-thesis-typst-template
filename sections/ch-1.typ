@@ -1,22 +1,22 @@
 #import "../dcthesis.typ": short
 
-= Sample Decent Chapter Title
+= Sample Chapter Title
 
-Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around!
+#lorem(120)
 
 #short[Shorter Title]
-== Section with an Unnecessarily Long Title
+== Section with an Rather Long Title
 
-Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around!
+#lorem(120)
 
-=== Example of a subsection
+=== An example subsection
 
-Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around!
+#lorem(120)
 
-==== Subsubsections, the final formatted heading
+==== And finally a subsubsection
 //
-Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around!
+#lorem(120)
 
 == A Second Section
 
-Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around! Every good story begins with a twist. Let's test it out and see how it goes. Beginning to ending, just spin around!
+#lorem(120)

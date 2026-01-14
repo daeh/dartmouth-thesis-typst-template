@@ -28,6 +28,24 @@
 }
 
 // ----------------------------------------------------------------------------
+// Type Conversion Helpers
+// ----------------------------------------------------------------------------
+// Convert content/string/none to string for PDF metadata (set document())
+
+/// Converts content, string, or none to a plain string.
+/// Used for PDF metadata which requires string values.
+#let to-string(value) = {
+  if value == none {
+    none
+  } else if type(value) == str {
+    value
+  } else {
+    // Content: extract plain text by rendering to string
+    repr(value).replace("\\[", "").replace("\\]", "").trim()
+  }
+}
+
+// ----------------------------------------------------------------------------
 // State Variables for Headers
 // ----------------------------------------------------------------------------
 // Track current chapter and section names for fancyhdr-style headers
@@ -68,14 +86,14 @@
 /// #example(```
 /// #show: dcthesis.with(
 ///   title: [My Thesis Title],
-///   author: "Jane Doe",
+///   author: "Author Name",
 ///   degree: "Doctor of Philosophy",
 ///   field: "Computer Science",
 ///   date: "June 2026",
-///   advisor: [Prof. Smith],
-///   examiner-1: [Prof. Jones],
-///   examiner-2: [Prof. Brown],
-///   examiner-3: [Prof. Wilson],
+///   advisor: [Prof. January],
+///   examiner-1: [Prof. February],
+///   examiner-2: [Prof. March],
+///   examiner-3: [Prof. April],
 /// )
 ///
 /// #frontmatter[
@@ -90,21 +108,20 @@
 /// ```)
 ///
 /// - title (content, str, none): Thesis title displayed on title page
-/// - author (str, none): Author name for title page and PDF metadata
-/// - degree (str): Degree name (default: "Doctor of Philosophy")
-/// - field (str, none): Field of study
-/// - date (str, none): Graduation date (e.g., "December 2026")
-/// - school (str): Graduate school name
-/// - university (str): University name
-/// - location (str): University location
+/// - author (content, str, none): Author name for title page and PDF metadata
+/// - degree (content, str, none): Degree name
+/// - field (content, str, none): Field of study
+/// - date (content, str, none): Graduation date (e.g., "December 2026")
+/// - school (content, str, none): Graduate school name
+/// - university (content, str, none): University name
+/// - location (content, str, none): University location
 /// - advisor (content, str, none): Thesis advisor (committee chair)
 /// - examiner-1 (content, str, none): Committee member 1
 /// - examiner-2 (content, str, none): Committee member 2
 /// - examiner-3 (content, str, none): Committee member 3
-/// - dean (str): Dean name for signature line
-/// - dean-title (str): Dean title for signature line
-/// - variant (str): Title page variant: "standard", "engineering", or "mals"
-/// - copyright (dictionary, none): Copyright info with `year` key; `name` defaults to author
+/// - dean (content, str, none): Dean name for signature line
+/// - dean-title (content, str, none): Dean title for signature line
+/// - copyright (dictionary, none): Copyright info with `year` and `name` keys; `name` is optional and defaults to author
 /// - hyphenate (bool): Enable automatic hyphenation
 /// - text-kwargs (dictionary): Additional arguments for `set text()`
 /// - page-kwargs (dictionary): Additional arguments for `set page()`
@@ -128,10 +145,10 @@
   examiner-1: none,
   examiner-2: none,
   examiner-3: none,
-  dean: "F. Jon Kull, Ph.D.",
+  dean: none,
   dean-title: "Dean of the Guarini School of Graduate and Advanced Studies",
   // === Title Page Variant ===
-  // Options: "standard", "engineering", "mals"
+  // Options: "standard" ("engineering" and "mals" variants not implemented)
   variant: "standard",
   // === Copyright Page ===
   // Set to (year: int, name: "string" or content) to include a copyright page
@@ -150,10 +167,14 @@
   // ==========================================================================
   // Visual fields (title, author) from first-level args
   // Additional metadata (keywords, date) via document-kwargs
+  // Note: document() requires string values, so we convert content to string
+
+  let title-str = to-string(title)
+  let author-str = to-string(author)
 
   let doc-specs = (
-    title: title,
-    author: if author != none { (author,) } else { () },
+    title: if title-str != none { title-str } else { "" },
+    author: if author-str != none { (author-str,) } else { () },
     ..document-kwargs,
   )
   set document(..doc-specs)
@@ -539,7 +560,7 @@
           [], box(width: 2.66667in, inset: (left: 42.55pt))[Examining Committee:],
           // Row 2: phantom underline | Advisor signature with +7pt horizontal offset
           hide(box(width: 3in)[#line(length: 3in)]),
-          box(width: 2.66667in + 7pt, inset: (left: 7pt))[#signature-line([#advisor, Chair])],
+          box(width: 2.66667in + 7pt, inset: (left: 7pt))[#signature-line([(chair) #advisor])],
           // Rows 3-5: empty | Member signatures with +7pt horizontal offset
           [], box(width: 2.66667in + 7pt, inset: (left: 7pt))[#signature-line(examiner-1)],
           [], box(width: 2.66667in + 7pt, inset: (left: 7pt))[#signature-line(examiner-2)],
