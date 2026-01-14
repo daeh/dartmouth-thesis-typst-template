@@ -47,7 +47,7 @@ The `dcthesis()` function accepts these parameters:
 
 **Optional Parameters**
 
-- **`copyright`** (dictionary | none): Copyright info with `year` and `name` keys (`name` defaults to `author`)
+- **`copyright`** (dictionary): Copyright info with `year` and `name` keys (`name` defaults to `author`)
 - **`hyphenate`** (boolean): Enable automatic hyphenation (default: true); set to false for easier proofreading
 
 ## Local Usage
@@ -82,6 +82,8 @@ Alternatively, you can install the fonts system-wide:
 - **Linux**: Copy fonts to `~/.local/share/fonts/` and run `fc-cache -fv`
 - **Windows**: Right-click the `.otf` files and select "Install"
 </details>
+
+The New Computer Modern fonts are distributed under the [GUST Font License](https://www.gust.org.pl/projects/e-foundry/licenses) (GFL). They are available for download from [CTAN](https://www.ctan.org/pkg/newcomputermodern) and the [official release page](https://download.gnu.org.ua/release/newcm/).
 
 ### Compilation
 
