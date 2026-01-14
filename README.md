@@ -2,8 +2,8 @@
 
 A [Typst](https://typst.app/) template for PhD and Master's theses conforming to [Dartmouth College](https://graduate.dartmouth.edu/) Guarini School of Graduate and Advanced Studies formatting requirements.
 
-|                  Title Page                   |                   Chapter Page                   |
-| :-------------------------------------------: | :----------------------------------------------: |
+|             Title Page             |                 Chapter Page                  |
+| :--------------------------------: | :-------------------------------------------: |
 | ![Title page](thumbnail-page1.png) | ![Chapter with sections](thumbnail-page6.png) |
 
 ## About
@@ -11,6 +11,7 @@ A [Typst](https://typst.app/) template for PhD and Master's theses conforming to
 This Typst template recreates the formatting of the [Dartmouth PhD Thesis LaTeX template](https://www.overleaf.com/latex/templates/dartmouth-phd-thesis/hdztkxftnsmd) originally created by F. G. Dorais (2007), updated for 2017 guidelines by David Freund and Daryl DeFord, and later updated by Marek Svoboda (2021). Like the original, this template is distributed under the [LaTeX Project Public License](http://www.latex-project.org/lppl.txt) (LPPL).
 
 The template supports:
+
 - Standard PhD/Master's thesis title page format
 - Engineering Sciences variant title page
 - MALS (Master of Arts in Liberal Studies) variant title page
@@ -52,10 +53,12 @@ typst watch --font-path fonts main.typ thesis.pdf
 
 ## Fonts
 
-This template uses [New Computer Modern](https://ctan.org/pkg/newcm) fonts, which are included in the `fonts/` directory. These fonts are distributed under the [GUST Font License](https://www.gust.org.pl/projects/e-foundry/licenses) (GFL), which is based on the LaTeX Project Public License.
+This template uses [New Computer Modern](https://ctan.org/pkg/newcomputermodern) fonts, which are included in the `fonts/` directory. These fonts are distributed under the [GUST Font License](https://www.gust.org.pl/projects/e-foundry/licenses) (GFL), which is based on the LaTeX Project Public License.
 
 The `--font-path fonts` flag tells Typst where to find the fonts. Alternatively, install them system-wide:
-- **macOS**: Double-click each `.otf` file and click "Install Font"
+
+- **macOS** (Homebrew): `brew install --cask font-new-computer-modern`
+- **macOS** (manual): Double-click each `.otf` file and click "Install Font"
 - **Linux**: Copy fonts to `~/.local/share/fonts/` and run `fc-cache -fv`
 - **Windows**: Right-click each `.otf` file and select "Install"
 
@@ -72,12 +75,14 @@ The included `VSCProject.code-workspace` file configures Visual Studio Code for 
 3. Select `VSCProject.code-workspace`
 
 The workspace configures:
+
 - [Tinymist](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) as the Typst formatter and language server
 - Typstyle formatting mode
 - Word separators for better navigation in Typst files
 - Spell checking with cSpell (ignores Typst-specific patterns)
 
 **Recommended Extensions** (will be suggested when opening the workspace):
+
 - [Tinymist Typst](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) - Language server with live preview
 - [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) - Spell checking
 
@@ -93,33 +98,33 @@ The `dcthesis()` function in `dcthesis.typ` accepts these parameters:
 
 ### Document Metadata
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `title` | content | Thesis title |
-| `author` | string | Author name |
-| `degree` | string | Degree type (default: "Doctor of Philosophy") |
-| `field` | string | Field of study |
-| `date` | string | Month and year of defense |
+| Parameter | Type    | Description                                   |
+| --------- | ------- | --------------------------------------------- |
+| `title`   | content | Thesis title                                  |
+| `author`  | string  | Author name                                   |
+| `degree`  | string  | Degree type (default: "Doctor of Philosophy") |
+| `field`   | string  | Field of study                                |
+| `date`    | string  | Month and year of defense                     |
 
 ### Committee
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `advisor` | content | Thesis advisor (chair) |
-| `examiner-1` | content | Committee member 1 |
-| `examiner-2` | content | Committee member 2 |
-| `examiner-3` | content | Committee member 3 |
-| `dean` | content | Dean name (default: "F. Jon Kull, Ph.D.") |
-| `dean-title` | content | Dean title |
+| Parameter    | Type    | Description                               |
+| ------------ | ------- | ----------------------------------------- |
+| `advisor`    | content | Thesis advisor (chair)                    |
+| `examiner-1` | content | Committee member 1                        |
+| `examiner-2` | content | Committee member 2                        |
+| `examiner-3` | content | Committee member 3                        |
+| `dean`       | content | Dean name (default: "F. Jon Kull, Ph.D.") |
+| `dean-title` | content | Dean title                                |
 
 ### Options
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `variant` | string | Title page variant: "standard", "engineering", or "mals" |
-| `copyright` | boolean | Include copyright page (default: false) |
-| `copyright-name` | string | Name for copyright (defaults to author) |
-| `copyright-year` | string | Year for copyright (defaults to current year) |
+| Parameter        | Type    | Description                                              |
+| ---------------- | ------- | -------------------------------------------------------- |
+| `variant`        | string  | Title page variant: "standard", "engineering", or "mals" |
+| `copyright`      | boolean | Include copyright page (default: false)                  |
+| `copyright-name` | string  | Name for copyright (defaults to author)                  |
+| `copyright-year` | string  | Year for copyright (defaults to current year)            |
 
 ## Document Structure
 

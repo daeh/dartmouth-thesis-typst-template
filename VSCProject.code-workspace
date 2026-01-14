@@ -1,0 +1,43 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "window.title": "Dartmouth Thesis Template (Typst)",
+    "[typst][typst-code][typst-markdown-injection]": {
+      "editor.defaultFormatter": "myriad-dreamin.tinymist"
+    },
+    "[typst]": {
+      "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+    },
+    "[typst-code]": {
+      "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+    },
+    "tinymist.formatterMode": "typstyle",
+    "tinymist.fontPaths": [],
+    "cSpell.words": [],
+    "cSpell.languageSettings": [
+      {
+        "languageId": "typst",
+        "ignoreRegExpList": [
+          "/@[\\w\\-:]+/g",
+          "/<[\\w\\-:]+>/g",
+          "/#import \"[\\w\\-\\./]+\\.typ\": [^\\n]*/g",
+          "/#include \"[\\w\\-\\./]+\\.typ\"/g",
+          "/image\\(\"[\\w\\-\\./]+\\.[\\w]+\"/g"
+        ],
+        "ignoreWords": [],
+        "dictionaries": ["typst"]
+      }
+    ],
+    "search.exclude": {}
+  },
+  "extensions": {
+    "recommendations": [
+      "myriad-dreamin.tinymist",
+      "streetsidesoftware.code-spell-checker"
+    ]
+  }
+}
