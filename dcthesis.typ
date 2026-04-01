@@ -77,6 +77,42 @@
   pending-short-title.update(title)
 }
 
+/// Renders an epigraph (block quote with attribution) for chapter openings.
+///
+/// Usage:
+/// #epigraph[
+///   Quoted text here \
+///   continuing on next line
+/// ][Author Name, _Work Title_ (Year)]
+///
+/// - body (content): The quoted text
+/// - attribution (content): Source attribution, displayed right-aligned below
+///
+/// -> content
+#let epigraph(body, attribution) = {
+  set par(first-line-indent: 0pt)
+  block(
+    above: 2em,
+    below: 2em,
+  )[
+    #align(right)[
+      #block(width: 95%)[
+        #set text(size: 11pt, style: "italic")
+        #set par(
+          leading: calc-leading(11pt, 22pt),
+          spacing: calc-leading(11pt, 22pt),
+          justify: false,
+        )
+        #body
+        #v(0.5em)
+        #set text(style: "normal", size: 10pt)
+        #set align(right)
+        --- #attribution
+      ]
+    ]
+  ]
+}
+
 /// Main Dartmouth thesis template function.
 ///
 /// Applies complete thesis formatting conforming to Dartmouth Graduate School
