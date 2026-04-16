@@ -2,17 +2,20 @@
 // Dartmouth College Thesis Template in Typst
 //
 
-#import "dcthesis.typ": *
+#import "dcthesis.typ": appendices, backmatter, dcthesis, frontmatter, mainmatter
+#import "@preview/pergamon:0.8.0": *
+
+#add-bib-resource(read("/references.bib"))
 
 #let hyphenate = true // Set to false to disable hyphenation (useful for proofreading)
 
 #show: dcthesis.with(
-  title: [A Study in Typst Thesis Templates],
+  thesis-title: [A Study in Typst Thesis Templates],
   author: [Author Name],
   degree: "Doctor of Philosophy",
   field: "Psychological and Brain Sciences",
   school: "Guarini School of Graduate and Advanced Studies",
-  date: "December 2026",
+  date: "February 2026",
 
   advisor: [Advisor One Name],
   examiner-1: [Advisor Two Name],
@@ -24,6 +27,7 @@
   // copyright: (year: 2026),  // Uncomment to add copyright page
 
   hyphenate: hyphenate,
+  draft: false,
 )
 
 // ============================================================================
@@ -34,10 +38,9 @@
   = Abstract
 
   Write your abstract here.
+  
+  = Acknowledgments
 
-  = Preface
-
-  Preface and Acknowledgments go here!
 
   // Table of Contents (automatic)
   #outline(
@@ -79,6 +82,17 @@
 // BACK MATTER
 // ============================================================================
 
-#backmatter[
-  #bibliography("references.bib", style: "apa", title: "References")
-]
+// BACK MATTER (optional)
+//
+// This template uses Pergamon for per-chapter bibliographies via refsection.
+// Each chapter wraps its content in #refsection(style: style)[...] and ends
+// with #print-apa7-bibliography(style). See sections/ch-2.typ for an example.
+//
+// If you prefer a single global bibliography instead, uncomment the backmatter
+// block below and remove the refsection wrappers from your chapter files.
+// Note: Typst's built-in bibliography() conflicts with Pergamon — use one or
+// the other, not both.
+//
+// #backmatter[
+//   #bibliography("references.bib", style: "apa", title: "References")
+// ]

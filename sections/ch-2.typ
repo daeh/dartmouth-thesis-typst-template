@@ -1,41 +1,97 @@
+#import "/dcthesis.typ": short
+#import "/utils/refs.typ": bib-section
+#import "/utils/apa7.typ": apa7-style, print-apa7-bibliography
+#import "@preview/pergamon:0.8.0": *
+
+#let style = apa7-style()
+
+#refsection(style: style)[
+
 = Citations and References
 
-This chapter demonstrates how to use citations in your thesis. The bibliography entries are defined in `references.bib` and rendered at the end of the document.
+This chapter demonstrates how to use citations and per-chapter bibliographies. This template uses #link("https://typst.app/universe/package/pergamon/")[Pergamon] (v0.8.0) for bibliography management, which provides per-chapter bibliographies through `refsection` and full control over citation and reference formatting through Typst code.
 
-== Bibliography Configuration
+== Bibliography Setup
 
-This template uses the APA citation style with a single bibliography at the end of the document. You can change the style by passing a different builtin style name to the `bibliography()` function in `main.typ`. You can also use custom CSL (Citation Style Language) files. See the Typst documentation for more information.
+=== Loading Bibliography Data
 
-If you prefer separate bibliographies at the end of each chapter, use the #link("https://typst.app/universe/package/alexandria/", [alexandria]) package.
+Bibliography entries are loaded in `main.typ` using Pergamon's `add-bib-resource`:
 
-The Typst bibliography function uses Hayagriva as its backend. References can be passed as a path to a BibLaTeX `.bib` file or a Hayagriva `.yaml`/`.yml` file.
+```typst
+#import "@preview/pergamon:0.8.0": *
+#add-bib-resource(read("/references.bib"))
+```
+
+The `read` function loads the BibLaTeX `.bib` file as a string, and Pergamon parses it. You can call `add-bib-resource` multiple times to load from multiple files. The optional `sentence-case-titles` parameter (default `false`) controls whether titles are converted to sentence case.
+
+=== Per-Chapter Bibliographies
+
+Each chapter that uses citations wraps its content in a `refsection` and ends with a `print-bibliography` call. Only the references cited within that refsection appear in its bibliography:
+
+```typst
+#import "@preview/pergamon:0.8.0": *
+#import "/utils/apa7.typ": apa7-style, print-apa7-bibliography
+#import "/utils/refs.typ": bib-section
+
+#let style = apa7-style()
+
+#refsection(style: style)[
+  = My Chapter
+  Some text with a citation #citep("key").
+
+  #bib-section[
+    #print-apa7-bibliography(style)
+  ]
+]
+```
+
+The `bib-section` utility from `utils/refs.typ` adds APA-compliant formatting (hanging indent, proper heading style). The `apa7-style()` function from `utils/apa7.typ` provides a custom APA 7th edition citation and reference style.
+
+== Citation Forms
+
+Pergamon 0.8.0 provides several convenience functions for different citation forms. All take string keys (not labels).
 
 === Parenthetical Citations
 
-A parenthetical citation places the full reference in parentheses. Write the citation key directly:
+Use `citep` for parenthetical citations where the entire reference is in parentheses:
 
-- `@shepard1987` produces: @shepard1987
-- `@fodor1988` produces: @fodor1988
+- `#citep("shepard1987")` produces: #citep("shepard1987")
+- `#citep("fodor1988")` produces: #citep("fodor1988")
 
 === Narrative Citations
 
-For narrative citations where the author name is part of the sentence, use the `cite` function with `form: "prose"`:
+Use `citet` for narrative (textual) citations where the author name is part of the sentence:
 
-- `#cite(<heidersimmel1944>, form: "prose")` produces: #cite(<heidersimmel1944>, form: "prose")
+- `#citet("heidersimmel1944")` produces: #citet("heidersimmel1944")
 
-For example: #cite(<heidersimmel1944>, form: "prose") demonstrated that observers attribute intentions to geometric shapes.
+For example: #citet("heidersimmel1944") demonstrated that observers attribute intentions to geometric shapes.
+
+=== Possessive Citations
+
+Use `citeg` for possessive citations:
+
+- `#citeg("moggi1991")` produces: #citeg("moggi1991")
+
+For example: #citeg("moggi1991") formalism unified several computational paradigms.
+
+=== Author-Only and Year-Only
+
+Use `citename` for the author name alone, and `citeyear` for the year alone:
+
+- `#citename("shepard1987")` produces: #citename("shepard1987")
+- `#citeyear("shepard1987")` produces: #citeyear("shepard1987")
 
 === Multiple Citations
 
-Multiple works can be cited together by listing them consecutively:
+Pass multiple keys to cite several works together:
 
-- `@fodor1988 @moggi1991` produces: @fodor1988 @moggi1991
+- `#citep("fodor1988", "moggi1991")` produces: #citep("fodor1988", "moggi1991")
 
-=== Specific Locators
+=== Bare Citations
 
-To cite a specific page, chapter, or section, add the locator after a comma:
+Use `citen` for citations without parentheses:
 
-- `@shepard1987[p.~1320]` produces: @shepard1987[p.~1320]
+- `#citen("shepard1987")` produces: #citen("shepard1987")
 
 == Tables, Figures, and Data
 
@@ -96,3 +152,10 @@ To insert an actual image:
   caption: [Experimental results across conditions.],
 ) <fig:results>
 ```
+
+// Per-chapter bibliography
+#bib-section[
+  #print-apa7-bibliography(style)
+]
+
+] // end refsection

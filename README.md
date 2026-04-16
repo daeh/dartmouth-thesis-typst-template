@@ -2,9 +2,9 @@
 
 A [Typst](https://typst.app/) template for PhD and Master's theses conforming to [Dartmouth College](https://graduate.dartmouth.edu/) Guarini School of Graduate and Advanced Studies formatting requirements.
 
-|             Title Page             |                 Chapter Page                  |
-| :--------------------------------: | :-------------------------------------------: |
-| ![Title page](thumbnail-page1.png) | ![Chapter with sections](thumbnail-page6.png) |
+|                 Title Page                 |                     Chapter Page                      |
+| :----------------------------------------: | :---------------------------------------------------: |
+| ![Title page](_output/thumbnail-page1.png) | ![Chapter with sections](_output/thumbnail-page6.png) |
 
 ## About
 
@@ -22,18 +22,22 @@ The template supports the standard PhD/Master's thesis title page format. Engine
 ## Template Files
 
 - [`main.typ`](main.typ) — Typst entry point
-- [`dcthesis.typ`](dcthesis.typ) — Template functions
+- [`dcthesis.typ`](dcthesis.typ) — Template functions (page layout, headings, title page)
 - [`references.bib`](references.bib) — Example BibLaTeX bibliography
 - [`sections/`](sections/) — Chapter files included by `main.typ`
+- [`utils/`](utils/) — Utilities
+  - [`apa7.typ`](utils/apa7.typ) — APA 7th edition citation and reference style for [Pergamon](https://typst.app/universe/package/pergamon/)
+  - [`refs.typ`](utils/refs.typ) — Bibliography section formatting and citation helpers
+- [`data/`](data/) — External data files (e.g., participant counts read into the document)
 - [`VSCProject.code-workspace`](VSCProject.code-workspace) — VS Code workspace configuration
 
-Compiled output: [`_output/typst.pdf`](_output/typst.pdf)
+Compiled output: [`_output/main.pdf`](_output/main.pdf)
 
 ## Template Parameters
 
 The `dcthesis()` function accepts these parameters:
 
-- **`title`** (content | string): Thesis title
+- **`thesis-title`** (content | string): Thesis title
 - **`author`** (content | string): Author name
 - **`degree`** (content | string): Degree type (default: "Doctor of Philosophy")
 - **`field`** (content | string): Field of study
@@ -49,6 +53,7 @@ The `dcthesis()` function accepts these parameters:
 
 - **`copyright`** (dictionary): Copyright info with `year` and `name` keys (`name` defaults to `author`)
 - **`hyphenate`** (boolean): Enable automatic hyphenation (default: true); set to false for easier proofreading
+- **`draft`** (boolean): Enable draft mode (default: false)
 
 ## Local Usage
 
@@ -122,47 +127,50 @@ The short title appears in the page header while the full title appears in the d
 
 ### Per-Chapter Bibliographies
 
-For theses requiring separate bibliographies at the end of each chapter (common for article-based dissertations), use the [Alexandria](https://typst.app/universe/package/alexandria/) package.
-
-<details>
-<summary>Alexandria usage</summary>
-
-Alexandria allows multiple independent bibliographies in a single document. Each chapter declares a unique prefix, and citations include that prefix to associate them with the correct bibliography.
+This template uses [Pergamon](https://typst.app/universe/package/pergamon/) (v0.8.0) for bibliography management, which supports per-chapter bibliographies through `refsection`. Each chapter wraps its content in a `refsection` and ends with a `print-bibliography` call. Only the references cited within that chapter appear in its bibliography.
 
 ```typst
-#import "@preview/alexandria:0.2.2": *
+#import "/utils/apa7.typ": apa7-style, print-apa7-bibliography
+#import "/utils/refs.typ": bib-section
+#import "@preview/pergamon:0.8.0": *
 
-// Chapter 1
-#show: alexandria(prefix: "ch1:", read: path => read(path))
+#let style = apa7-style()
 
-= Introduction
+#refsection(style: style)[
+  = My Chapter
 
-Discussion of prior work @ch1:smith2020 and theory @ch1:jones2019.
+  Some text with a citation #citep("smith2020").
 
-#bibliographyx("references.bib", prefix: "ch1:", title: "References")
-
-// Chapter 2
-#show: alexandria(prefix: "ch2:", read: path => read(path))
-
-= Methods
-
-Following established procedures @ch2:protocol2021.
-
-#bibliographyx("references.bib", prefix: "ch2:", title: "References")
+  #bib-section[
+    #print-apa7-bibliography(style)
+  ]
+]
 ```
 
-The `.bib` file uses standard keys (e.g., `smith2020`), but citations prepend the chapter prefix (e.g., `@ch1:smith2020`). The same entry can appear in multiple chapter bibliographies.
+Pergamon provides several citation convenience functions:
 
-See the Alexandria documentation for details on citation grouping, style options, and filtering.
+| Function | Form | Example output |
+|----------|------|----------------|
+| `#citep("key")` | Parenthetical | (Smith, 2020) |
+| `#citet("key")` | Narrative | Smith (2020) |
+| `#citeg("key")` | Possessive | Smith's (2020) |
+| `#citename("key")` | Author only | Smith |
+| `#citeyear("key")` | Year only | 2020 |
+| `#citen("key")` | Bare | Smith, 2020 |
 
-</details>
+See [`sections/ch-2.typ`](sections/ch-2.typ) for a full working example.
+
+Chapters that do not use citations (like [`sections/ch-1.typ`](sections/ch-1.typ)) do not need a `refsection` wrapper.
+
+If you prefer a single global bibliography instead, you can replace the per-chapter setup with Typst's built-in `bibliography()` function in the backmatter. See the comments in [`main.typ`](main.typ) for details. Note that Typst's built-in bibliography and Pergamon cannot be used simultaneously.
 
 ## Requirements
 
-- [Typst](https://typst.app/) v0.14.0 or later
+- [Typst](https://typst.app/) v0.14.2 or later
   - NB the Tinymist extension packages Typst so you don't need to install Typst separately if you use Tinymist. (However, it is often useful to also have the Typst CLI installed.)
   - See the Typst [installation guide](https://github.com/typst/typst#installation)
     - (On macOS, you can install via [Homebrew](https://brew.sh/): `brew install typst`)
+- [Pergamon](https://typst.app/universe/package/pergamon/) v0.8.0 (downloaded automatically by Typst on first compile)
 - [New Computer Modern](https://ctan.org/pkg/newcm) fonts
   - Install system-wide or use the `.otf` files included in the [`fonts/`](fonts/) folder of this repository
 

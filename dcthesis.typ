@@ -9,6 +9,8 @@
 // Date: 2026-01-11
 // ============================================================================
 
+#let x-target = sys.inputs.at("x-target", default: "pdf")
+
 // ----------------------------------------------------------------------------
 // Line Height Calculation
 // ----------------------------------------------------------------------------
@@ -46,17 +48,14 @@
 }
 
 // ----------------------------------------------------------------------------
-// State Variables for Headers
+// Short Title State
 // ----------------------------------------------------------------------------
-// Track current chapter and section names for fancyhdr-style headers
-
-#let chapter-state = state("chapter", none)
-#let section-state = state("section", none)
+// Track short titles for page headers
 
 // Pending short title for next heading (consumed when heading is rendered)
 #let pending-short-title = state("pending-short-title", none)
 
-// Dictionary of short titles, keyed by heading body text
+// Dictionary of short titles, keyed by heading body repr
 #let short-titles = state("short-titles", (:))
 
 /// Sets a short title for page headers when the full heading is too long.
@@ -77,61 +76,27 @@
   pending-short-title.update(title)
 }
 
-/// Main Dartmouth thesis template function.
-///
-/// Applies complete thesis formatting conforming to Dartmouth Graduate School
-/// guidelines. Includes page layout, typography, heading styles, title page
-/// generation, and page numbering. Use with a show rule to format your document.
+// Pending heading size override (consumed when heading is rendered)
+#let pending-heading-size = state("pending-heading-size", none)
+
+/// Sets a custom font size for the next heading's rendered title.
+/// Does NOT affect the TOC entry. Place immediately before a heading.
 ///
 /// #example(```
-/// #show: dcthesis.with(
-///   title: [My Thesis Title],
-///   author: "Author Name",
-///   degree: "Doctor of Philosophy",
-///   field: "Computer Science",
-///   date: "June 2026",
-///   advisor: [Prof. January],
-///   examiner-1: [Prof. February],
-///   examiner-2: [Prof. March],
-///   examiner-3: [Prof. April],
-/// )
-///
-/// #frontmatter[
-///   = Abstract
-///   ...
-/// ]
-///
-/// #mainmatter[
-///   = Introduction
-///   ...
-/// ]
+/// #heading-size(20pt)
+/// = A Very Long Chapter Title That Needs To Be Smaller
 /// ```)
 ///
-/// - title (content, str, none): Thesis title displayed on title page
-/// - author (content, str, none): Author name for title page and PDF metadata
-/// - degree (content, str, none): Degree name
-/// - field (content, str, none): Field of study
-/// - date (content, str, none): Graduation date (e.g., "December 2026")
-/// - school (content, str, none): Graduate school name
-/// - university (content, str, none): University name
-/// - location (content, str, none): University location
-/// - advisor (content, str, none): Thesis advisor (committee chair)
-/// - examiner-1 (content, str, none): Committee member 1
-/// - examiner-2 (content, str, none): Committee member 2
-/// - examiner-3 (content, str, none): Committee member 3
-/// - dean (content, str, none): Dean name for signature line
-/// - dean-title (content, str, none): Dean title for signature line
-/// - copyright (dictionary, none): Copyright info with `year` and `name` keys; `name` is optional and defaults to author
-/// - hyphenate (bool): Enable automatic hyphenation
-/// - text-kwargs (dictionary): Additional arguments for `set text()`
-/// - page-kwargs (dictionary): Additional arguments for `set page()`
-/// - document-kwargs (dictionary): Additional arguments for `set document()`
-/// - body (content): Document content
+/// - size (length): The font size for the heading title
 ///
-/// -> content
-#let dcthesis(
-  // === Document Metadata ===
-  title: none,
+/// -> none
+#let heading-size(size) = {
+  pending-heading-size.update(size)
+}
+
+
+#let title-page(
+  thesis-title: none,
   author: none,
   degree: "Doctor of Philosophy",
   field: none,
@@ -153,315 +118,12 @@
   // === Copyright Page ===
   // Set to (year: int, name: "string" or content) to include a copyright page
   copyright: none,
-  // === Typography Options ===
-  hyphenate: true, // Set to false to disable hyphenation (useful for proofreading)
-  // === Advanced Overrides ===
-  text-kwargs: (:), // Additional arguments passed to `set text()`
-  page-kwargs: (:), // Additional arguments passed to `set page()`
-  document-kwargs: (:), // Additional arguments passed to `set document()` (e.g., keywords, date)
-  // === Document Body ===
-  body,
 ) = {
-  // ==========================================================================
-  // DOCUMENT METADATA (PDF properties)
-  // ==========================================================================
-  // Visual fields (title, author) from first-level args
-  // Additional metadata (keywords, date) via document-kwargs
-  // Note: document() requires string values, so we convert content to string
-
-  let title-str = to-string(title)
-  let author-str = to-string(author)
-
-  let doc-specs = (
-    title: if title-str != none { title-str } else { "" },
-    author: if author-str != none { (author-str,) } else { () },
-    ..document-kwargs,
-  )
-  set document(..doc-specs)
-
-  // ==========================================================================
-  // FONT CONFIGURATION
-  // ==========================================================================
-
-  set text(
-    font: "New Computer Modern",
-    size: 12pt,
-    top-edge: "cap-height",
-    bottom-edge: "descender",
-    lang: "en",
-    region: "US",
-    hyphenate: hyphenate,
-    ..text-kwargs,
-  )
-
-  // Math font
-  show math.equation: set text(
-    font: "New Computer Modern Math",
-  )
-
-  // ==========================================================================
-  // PAGE LAYOUT
-  // ==========================================================================
-  //
-  // Why different top margins for title page vs other pages?
-  // --------------------------------------------------------
-  // LaTeX uses geometry{top=1.25in} uniformly, but actual content position differs:
-  // - Title page (\thispagestyle{empty}): content starts at ~1in from top
-  // - Regular pages: content starts at ~1.25in + headheight + headsep from top
-  //
-  // This happens because fancyhdr reserves header space (headheight=16pt + headsep)
-  // on regular pages even when empty style is used elsewhere. The title page,
-  // being inside the titlepage environment with empty style, doesn't have this
-  // overhead applied the same way.
-  //
-  // In Typst, we must explicitly use different margins to match this behavior:
-  // - Title page: top: 1in (via page() override)
-  // - Regular pages: top: 1.25in + 8pt (accounts for header space difference)
-  //
-  // Alternative approaches considered:
-  // - Uniform margins with phantom header on title page: adds complexity
-  // - Adjusting header-ascent to absorb the difference: harder to reason about
-  // The explicit different-margins approach is clearest for maintenance.
-
-  set page(
-    paper: "us-letter",
-    margin: (
-      left: 1.5in, // Binding requirement
-      top: 1.25in + 8pt, // See comment above for why this differs from title page
-      bottom: 1in,
-      right: 1in,
-    ),
-    numbering: none, // Controlled per section
-    header: none, // Set dynamically
-    footer: none, // Set dynamically
-    // header-ascent controls how far header is raised into margin (higher = further from body)
-    header-ascent: 16pt + 8pt, // NB use this to control the position of the line after the header. use inset to control the position of the text itself.
-    // LaTeX footer position: footskip (~0.25in) from body bottom
-    footer-descent: 0.35in, // NB use this to control the position of the footer text
-    ..page-kwargs,
-  )
-
-  // ==========================================================================
-  // PARAGRAPH SETTINGS
-  // ==========================================================================
-
-  set par(
-    first-line-indent: 1.5em, // Matches LaTeX book class default (18pt at 12pt)
-    leading: calc-leading(12pt, 24pt), // Double spacing (baselineskip = 24pt)
-    spacing: calc-leading(12pt, 24pt),
-    justify: true,
-    linebreaks: "optimized",
-    justification-limits: (
-      // for typst 0.14.0 and later
-      spacing: (min: 80%, max: 100%), // The spacing entry defines how much the width of spaces between words may be adjusted.
-      tracking: (min: -0.009em, max: 0.02em), // The tracking entry defines how much the spacing between letters may be adjusted.
-    ),
-  )
-
-  // Enable heading numbering (required for counter(heading) to work properly)
-  set heading(numbering: "1.1.1.1")
-
-  // ==========================================================================
-  // HEADING STYLES
-  // ==========================================================================
-
-  // Chapter Headings (Level 1)
-  // Matches dcthesis.cls lines 220-231 (titlesec [display] configuration)
-  // LaTeX font sizes at 12pt: \LARGE=20pt, \Huge=25pt
-  // titlesec [display] default spacing: 50pt before-sep, 40pt after-sep
-  show heading.where(level: 1): it => {
-    // Reset section state when entering new chapter
-    section-state.update(none)
-    // Update chapter state for headers (LaTeX \leftmark) - placed after content
-    // so counter is read at the correct time
-
-    // LaTeX book class forces chapters to start on new pages (\clearpage)
-    pagebreak(weak: true)
-
-    // titlesec default before-sep: 50pt from top margin to first rule
-    // Must use v() because block(above:) collapses at page top
-    v(58.5pt)
-
-    align(
-      center,
-      block(
-        above: 0pt,
-        below: 50.5pt,
-        width: 100%,
-        breakable: false,
-        stack(
-          dir: ttb,
-          spacing: 12pt, // 1pc gap from bottom rule to title (matches LaTeX \vspace{1pc})
-          // Bordered block with top/bottom rules containing chapter label
-          // Structure matches LaTeX: rule -> 10pt -> text -> 12pt (sep) -> rule
-          block(
-            above: 0pt,
-            below: 0pt,
-            width: 100%,
-            stroke: (top: 1pt, bottom: 1pt),
-            inset: (top: 25pt, bottom: 25pt),
-            {
-              // Use baseline bottom-edge so inset measures from baseline to stroke
-              // (matches LaTeX where sep is from baseline to next rule)
-              set text(top-edge: "cap-height", bottom-edge: "baseline")
-              text(
-                size: 20pt,
-                font: "New Computer Modern Sans",
-                weight: "regular",
-              )[
-                #if type(it.numbering) == function {
-                  // Custom numbering (appendices) - numbering function returns full label
-                  counter(heading).display(it.numbering)
-                } else {
-                  // Standard numbering - prepend "Chapter"
-                  [Chapter #counter(heading).display("1")]
-                }
-              ]
-            },
-          ),
-          v(30pt),
-          // Chapter title: \Huge\bfseries = 25pt bold
-          text(size: 25pt, weight: "bold")[#it.body],
-        ),
-      ),
-    )
-
-    // Update chapter state for headers (LaTeX \leftmark)
-    // Format: "CHAPTER N.  TITLE" or "SUPPLEMENT A.  TITLE" for appendices
-    chapter-state.update(
-      if type(it.numbering) == function {
-        [#upper(counter(heading).display(it.numbering))#h(1em)#upper(it.body)]
-      } else {
-        [CHAPTER #counter(heading).display("1")#h(1em)#upper(it.body)]
-      },
-    )
-  }
-
-  // Section Headings (Level 2)
-  // Matches dcthesis.cls lines 233-240 (titlesec [frame] style)
-  // LaTeX font sizes at 12pt: \large=14pt, \Large=17pt
-  // Frame stroke uses \fboxrule default = 0.4pt
-  show heading.where(level: 2): it => {
-    // Check for pending short title and consume it
-    context {
-      let short = pending-short-title.get()
-      if short != none {
-        pending-short-title.update(none)
-        // Store in dictionary for header lookup
-        let key = repr(it.body)
-        short-titles.update(d => {
-          d.insert(key, short)
-          d
-        })
-      }
-      // Store short title (or full title) for header - keyed by heading body
-      let header-title = if short != none { upper(short) } else { upper(it.body) }
-
-      // Label text: \sffamily\large = sans-serif 14pt, with \enspace (0.5em) padding
-      let label = text(
-        font: "New Computer Modern Sans",
-        size: 14pt,
-        weight: "regular",
-      )[#h(0.5em)#if type(it.numbering) == function {
-          // Appendix mode - just show number (e.g., "A.1")
-          counter(heading).display(it.numbering)
-        } else {
-          // Standard mode - "Section 1.1"
-          [Section #counter(heading).display("1.1")]
-        }#h(0.5em)]
-
-      // Title text: \Large\bfseries = 17pt bold, centered
-      let title = text(
-        size: 17pt,
-        weight: "bold",
-      )[#it.body]
-
-      // Frame parameters
-      let stroke-width = 0.4pt // \fboxrule default
-      let frame-inset = 8pt // titlesec sep parameter
-      let label-inset = 0.5em // Horizontal offset from frame edge
-
-      block(above: 1.6em, below: 1.3em, width: 100%)[
-        // The frame with title content inside
-        #rect(
-          width: 100%,
-          stroke: stroke-width,
-          inset: (
-            left: frame-inset,
-            right: frame-inset,
-            // Extra top padding to make room for the label on the border
-            top: frame-inset + 14pt,
-            bottom: frame-inset + 9pt,
-          ),
-        )[
-          #align(center, title)
-        ]
-
-        // Overlay the label on top border (positioned from top-left of the block)
-        // dy centers the label vertically on the border line
-        #place(
-          top + left,
-          dx: label-inset,
-          dy: -0.5em,
-        )[
-          // White background breaks the border line behind the text
-          #box(
-            fill: white,
-            inset: (x: 1pt, y: 3pt),
-          )[#label]
-        ]
-      ]
-
-      // Update section state for headers (LaTeX \rightmark)
-      // Uses short title if provided, otherwise full title
-      let header-num = if type(it.numbering) == function {
-        counter(heading).display(it.numbering)
-      } else {
-        counter(heading).display("1.1")
-      }
-      section-state.update[#header-num#h(1em)#header-title]
-    }
-  }
-
-  // Subsection Headings (Level 3)
-  // Matches dcthesis.cls lines 242-247
-  show heading.where(level: 3): it => {
-    let num = if type(it.numbering) == function {
-      counter(heading).display(it.numbering)
-    } else {
-      counter(heading).display("1.1.1")
-    }
-    block(
-      above: 2.5em,
-      below: 0.67em,
-      width: 100%,
-      stroke: (bottom: 0.4pt),
-      inset: (bottom: 0.42em),
-    )[
-      #text(weight: "bold")[
-        #num. #it.body
-      ]
-    ]
-  }
-
-  // Subsubsection Headings (Level 4)
-  // Matches dcthesis.cls lines 249-254 (run-in style)
-  // Uses block() to prevent first-line-indent on following paragraph (from CogSci pattern)
-  show heading.where(level: 4): it => {
-    v(2.5em, weak: true)
-    (
-      block(above: 0pt, below: 0pt)
-        + text(
-          weight: "bold",
-          style: "italic",
-          it.body + [. ] + h(0.5em, weak: false),
-        )
-    )
-  }
-
   // ==========================================================================
   // TITLE PAGE
   // ==========================================================================
+
+  // Generate title page based on variant
 
   // Signature line helper (2.66667in width)
   // Matches LaTeX \@signatureline
@@ -484,20 +146,28 @@
     ]
   }
 
-  // Generate title page based on variant
-  if variant == "standard" {
-    // LaTeX \bigbreak is approximately 12pt with some glue
-    let bigbreak = v(12pt, weak: false)
+  // LaTeX \bigbreak is approximately 12pt with some glue
+  let bigbreak = v(12pt, weak: false)
 
+  return [
+    // #let page-background = {
+    //   place(
+    //     top + left,
+    //     dx: 0pt,
+    //     dy: 0pt,
+    //     image("/figs/title_page_signed.png", width: 100%, height: 100%, fit: "stretch"),
+    //   )
+    // }
     // Title page with isolated margins (main.tex uses \newgeometry{top=1in})
     // Using page() function to scope margins to just this page
-    page(
+    #page(
       margin: (
         left: 1.5in,
         top: 1in,
         bottom: 1in,
         right: 1in,
       ),
+      // background: page-background,
     )[
       // Single spacing for title page
       #set par(
@@ -505,13 +175,29 @@
         spacing: calc-leading(12pt, 14.5pt),
         first-line-indent: 0pt,
       )
+      #set text(
+        font: "New Computer Modern",
+        size: 12pt,
+        top-edge: "cap-height",
+        bottom-edge: "descender",
+        lang: "en",
+        region: "US",
+        hyphenate: false,
+      )
 
       #align(center)[
         // LaTeX \begin{center} adds ~\topsep before first element
         #v(4pt)
 
-        // Title: \bfseries \MakeUppercase{\@title}
-        #text(weight: "bold", upper(title))
+        #[
+          #set par(
+            // leading: calc-leading(11pt, 18pt), // Double spacing (baselineskip = 24pt)
+            // spacing: calc-leading(11pt, 18pt),
+            justify: false,
+          )
+          // Title: \bfseries \MakeUppercase{\@title}
+          #text(weight: "bold", hyphenate: false, upper(thesis-title))
+        ]
 
         #bigbreak
 
@@ -574,13 +260,522 @@
         #v(10.3pt)
       ]
     ]
+
+
+    // LaTeX dcthesis.cls creates a blank page after title page
+    // (from \null\vfil in maketitle, even when no copyright page)
+    // This is the back side of the title page when printed
+    #pagebreak()
+    #pagebreak()
+  ]
+}
+
+/// Main Dartmouth thesis template function.
+///
+/// Applies complete thesis formatting conforming to Dartmouth Graduate School
+/// guidelines. Includes page layout, typography, heading styles, title page
+/// generation, and page numbering. Use with a show rule to format your document.
+///
+/// #example(```
+/// #show: dcthesis.with(
+///   title: [My Thesis Title],
+///   author: "Author Name",
+///   degree: "Doctor of Philosophy",
+///   field: "Computer Science",
+///   date: "June 2026",
+///   advisor: [Prof. January],
+///   examiner-1: [Prof. February],
+///   examiner-2: [Prof. March],
+///   examiner-3: [Prof. April],
+/// )
+///
+/// #frontmatter[
+///   = Abstract
+///   ...
+/// ]
+///
+/// #mainmatter[
+///   = Introduction
+///   ...
+/// ]
+/// ```)
+///
+/// - title (content, str, none): Thesis title displayed on title page
+/// - author (content, str, none): Author name for title page and PDF metadata
+/// - degree (content, str, none): Degree name
+/// - field (content, str, none): Field of study
+/// - date (content, str, none): Graduation date (e.g., "December 2026")
+/// - school (content, str, none): Graduate school name
+/// - university (content, str, none): University name
+/// - location (content, str, none): University location
+/// - advisor (content, str, none): Thesis advisor (committee chair)
+/// - examiner-1 (content, str, none): Committee member 1
+/// - examiner-2 (content, str, none): Committee member 2
+/// - examiner-3 (content, str, none): Committee member 3
+/// - dean (content, str, none): Dean name for signature line
+/// - dean-title (content, str, none): Dean title for signature line
+/// - copyright (dictionary, none): Copyright info with `year` and `name` keys; `name` is optional and defaults to author
+/// - hyphenate (bool): Enable automatic hyphenation
+/// - text-kwargs (dictionary): Additional arguments for `set text()`
+/// - page-kwargs (dictionary): Additional arguments for `set page()`
+/// - document-kwargs (dictionary): Additional arguments for `set document()`
+/// - body (content): Document content
+///
+/// -> content
+#let dcthesis(
+  // === Document Metadata ===
+  thesis-title: none,
+  author: none,
+  degree: "Doctor of Philosophy",
+  field: none,
+  date: none,
+  // === Institution ===
+  school: "Guarini School of Graduate and Advanced Studies",
+  university: "Dartmouth College",
+  location: "Hanover, New Hampshire",
+  // === Examining Committee ===
+  advisor: none,
+  examiner-1: none,
+  examiner-2: none,
+  examiner-3: none,
+  dean: none,
+  dean-title: "Dean of the Guarini School of Graduate and Advanced Studies",
+  // === Title Page Variant ===
+  // Options: "standard" ("engineering" and "mals" variants not implemented)
+  variant: "standard",
+  // === Copyright Page ===
+  // Set to (year: int, name: "string" or content) to include a copyright page
+  copyright: none,
+  // === Drafting Options ===
+  hyphenate: none, // Set to false to disable hyphenation (useful for proofreading)
+  draft: false, // Set to true to enable draft mode (e.g., show overfull boxes)
+  // === Advanced Overrides ===
+  text-kwargs: (:), // Additional arguments passed to `set text()`
+  page-kwargs: (:), // Additional arguments passed to `set page()`
+  document-kwargs: (:), // Additional arguments passed to `set document()` (e.g., keywords, date)
+  // === Document Body ===
+  body,
+) = {
+  // ==========================================================================
+  // DOCUMENT METADATA (PDF properties)
+  // ==========================================================================
+  // Visual fields (title, author) from first-level args
+  // Additional metadata (keywords, date) via document-kwargs
+  // Note: document() requires string values, so we convert content to string
+
+  let hyphenate = if (hyphenate == none or draft == false) { true } else { hyphenate }
+
+  let title-str = to-string(title)
+  let author-str = to-string(author)
+
+  let doc-specs = (
+    title: if title-str != none { title-str } else { "" },
+    author: if author-str != none { (author-str,) } else { () },
+    ..document-kwargs,
+  )
+  set document(..doc-specs)
+
+  // ==========================================================================
+  // FONT CONFIGURATION
+  // ==========================================================================
+
+  set text(
+    font: "New Computer Modern",
+    size: 12pt,
+    top-edge: "cap-height",
+    bottom-edge: "descender",
+    lang: "en",
+    region: "US",
+    hyphenate: hyphenate,
+    overhang: true, // allows hyphens, periods, etc. to protrude into margin
+    ..text-kwargs,
+  )
+
+  // Math font
+  show math.equation: set text(
+    font: "New Computer Modern Math",
+  )
+
+  // ==========================================================================
+  // PAGE LAYOUT
+  // ==========================================================================
+  //
+  // Why different top margins for title page vs other pages?
+  // --------------------------------------------------------
+  // LaTeX uses geometry{top=1.25in} uniformly, but actual content position differs:
+  // - Title page (\thispagestyle{empty}): content starts at ~1in from top
+  // - Regular pages: content starts at ~1.25in + headheight + headsep from top
+  //
+  // This happens because fancyhdr reserves header space (headheight=16pt + headsep)
+  // on regular pages even when empty style is used elsewhere. The title page,
+  // being inside the titlepage environment with empty style, doesn't have this
+  // overhead applied the same way.
+  //
+  // In Typst, we must explicitly use different margins to match this behavior:
+  // - Title page: top: 1in (via page() override)
+  // - Regular pages: top: 1.25in + 8pt (accounts for header space difference)
+  //
+  // Alternative approaches considered:
+  // - Uniform margins with phantom header on title page: adds complexity
+  // - Adjusting header-ascent to absorb the difference: harder to reason about
+  // The explicit different-margins approach is clearest for maintenance.
+
+  set page(
+    paper: "us-letter",
+    margin: (
+      left: 1.5in, // Binding requirement
+      top: 0.95in + 8pt, // See comment above for why this differs from title page
+      bottom: 0.8in,
+      right: 0.5in + 0.02in, // +0.02in pad for overhang of hyphens
+    ),
+    numbering: none, // Controlled per section
+    header: none, // Set dynamically
+    footer: none, // Set dynamically
+    // header-ascent controls how far header is raised into margin (higher = further from body)
+    header-ascent: 16pt + 8pt, // NB use this to control the position of the line after the header. use inset to control the position of the text itself.
+    // LaTeX footer position: footskip (~0.25in) from body bottom
+    footer-descent: 0.18in, // NB use this to control the position of the footer text
+    ..page-kwargs,
+  )
+
+  // ==========================================================================
+  // PARAGRAPH SETTINGS
+  // ==========================================================================
+
+  set par(
+    first-line-indent: 1.5em, // Matches LaTeX book class default (18pt at 12pt)
+    leading: calc-leading(11pt, 18pt), // Double spacing (baselineskip = 24pt)
+    spacing: calc-leading(11pt, 18pt),
+    justify: true,
+    linebreaks: "optimized",
+    justification-limits: (
+      // for typst 0.14.0 and later
+      spacing: (min: 80%, max: 100%), // The spacing entry defines how much the width of spaces between words may be adjusted.
+      tracking: (min: -0.009em, max: 0.02em), // The tracking entry defines how much the spacing between letters may be adjusted.
+    ),
+  )
+
+  // Enable heading numbering (required for counter(heading) to work properly)
+  set heading(numbering: "1.1.1.1")
+
+  // ==========================================================================
+  // HEADING STYLES
+  // ==========================================================================
+
+  // Chapter Headings (Level 1)
+  // Matches dcthesis.cls lines 220-231 (titlesec [display] configuration)
+  // LaTeX font sizes at 12pt: \LARGE=20pt, \Huge=25pt
+  // titlesec [display] default spacing: 50pt before-sep, 40pt after-sep
+  show heading.where(level: 1): it => {
+    // Check for pending short title and store it
+    context {
+      let short = pending-short-title.get()
+      if short != none {
+        pending-short-title.update(none)
+        let key = repr(it.body)
+        short-titles.update(d => {
+          d.insert(key, short)
+          d
+        })
+      }
+    }
+
+    // Reset figure counters for chapter-based numbering (e.g., Fig. 2.1)
+    counter(figure.where(kind: image)).update(0)
+    counter(figure.where(kind: table)).update(0)
+
+    // LaTeX book class forces chapters to start on new pages (\clearpage)
+    pagebreak(weak: true)
+
+    // titlesec default before-sep: 50pt from top margin to first rule
+    // Must use v() because block(above:) collapses at page top
+    v(58.5pt)
+
+    align(
+      center,
+      block(
+        above: 0pt,
+        below: 50.5pt,
+        width: 100%,
+        breakable: false,
+        stack(
+          dir: ttb,
+          spacing: 12pt, // 1pc gap from bottom rule to title (matches LaTeX \vspace{1pc})
+          // Bordered block with top/bottom rules containing chapter label
+          // Structure matches LaTeX: rule -> 10pt -> text -> 12pt (sep) -> rule
+          block(
+            above: 0pt,
+            below: 0pt,
+            width: 100%,
+            stroke: (top: 1pt, bottom: 1pt),
+            inset: (top: 25pt, bottom: 25pt),
+            {
+              // Use baseline bottom-edge so inset measures from baseline to stroke
+              // (matches LaTeX where sep is from baseline to next rule)
+              set text(top-edge: "cap-height", bottom-edge: "baseline")
+              text(
+                size: 20pt,
+                font: "New Computer Modern Sans",
+                weight: "regular",
+              )[
+                #if type(it.numbering) == function {
+                  // Custom numbering (appendices) - numbering function returns full label
+                  counter(heading).display(it.numbering)
+                } else {
+                  // Standard numbering - prepend "Chapter"
+                  [Chapter #counter(heading).display("1")]
+                }
+              ]
+            },
+          ),
+          v(30pt),
+          // Chapter title: \Huge\bfseries = 25pt bold (or custom size via #heading-size)
+          context {
+            let custom-size = pending-heading-size.get()
+            if custom-size != none {
+              pending-heading-size.update(none)
+            }
+            let title-size = if custom-size != none { custom-size } else { 25pt }
+            set par(justify: false)
+            text(size: title-size, weight: "bold", hyphenate: false)[#it.body]
+          },
+        ),
+      ),
+    )
   }
 
-  // LaTeX dcthesis.cls creates a blank page after title page
-  // (from \null\vfil in maketitle, even when no copyright page)
-  // This is the back side of the title page when printed
-  pagebreak()
-  pagebreak()
+  // Section Headings (Level 2)
+  // Matches dcthesis.cls lines 233-240 (titlesec [frame] style)
+  // LaTeX font sizes at 12pt: \large=14pt, \Large=17pt
+  // Frame stroke uses \fboxrule default = 0.4pt
+  show heading.where(level: 2): it => {
+    // Check for pending short title and store it
+    context {
+      let short = pending-short-title.get()
+      if short != none {
+        pending-short-title.update(none)
+        let key = repr(it.body)
+        short-titles.update(d => {
+          d.insert(key, short)
+          d
+        })
+      }
+    }
+
+    // Unnumbered sections: simple centered bold text (e.g., Abstract)
+    if it.numbering == none {
+      block(above: 1.6em * 2, below: 1.3em, width: 100%)[
+        #align(center, text(size: 17pt, weight: "bold")[#it.body])
+      ]
+      return
+    }
+
+    // Label text: \sffamily\large = sans-serif 14pt, with \enspace (0.5em) padding
+    let label = text(
+      font: "New Computer Modern Sans",
+      size: 14pt,
+      weight: "regular",
+    )[#h(0.5em)#if type(it.numbering) == function {
+        // Appendix mode - just show number (e.g., "A.1")
+        counter(heading).display(it.numbering)
+      } else {
+        // Standard mode - "Section 1.1"
+        [Section #counter(heading).display("1.1")]
+      }#h(0.5em)]
+
+    // Title text: \Large\bfseries = 17pt bold, centered (or custom size via #heading-size)
+    let title = context {
+      let custom-size = pending-heading-size.get()
+      if custom-size != none {
+        pending-heading-size.update(none)
+      }
+      let s = if custom-size != none { custom-size } else { 17pt }
+      text(size: s, weight: "bold")[#it.body]
+    }
+
+    // Frame parameters
+    let stroke-width = 0.4pt // \fboxrule default
+    let frame-inset = 8pt // titlesec sep parameter
+    let label-inset = 0.5em // Horizontal offset from frame edge
+
+    block(above: 1.6em * 2, below: 1.3em, width: 100%)[
+      // The frame with title content inside
+      #rect(
+        width: 100%,
+        stroke: stroke-width,
+        inset: (
+          left: frame-inset,
+          right: frame-inset,
+          // Extra top padding to make room for the label on the border
+          top: frame-inset + 14pt,
+          bottom: frame-inset + 9pt,
+        ),
+      )[
+        #align(center, title)
+      ]
+
+      // Overlay the label on top border (positioned from top-left of the block)
+      // dy centers the label vertically on the border line
+      #place(
+        top + left,
+        dx: label-inset,
+        dy: -0.5em,
+      )[
+        // White background breaks the border line behind the text
+        #box(
+          fill: white,
+          inset: (x: 1pt, y: 3pt),
+        )[#label]
+      ]
+    ]
+  }
+
+  // Subsection Headings (Level 3)
+  // Matches dcthesis.cls lines 242-247
+  show heading.where(level: 3): it => {
+    let num = if type(it.numbering) == function {
+      counter(heading).display(it.numbering)
+    } else {
+      counter(heading).display("1.1.1")
+    }
+    block(
+      above: 2.5em,
+      below: 0.67em,
+      width: 100%,
+      stroke: (bottom: 0.4pt),
+      inset: (bottom: 0.42em),
+    )[
+      #text(weight: "bold")[
+        #num. #it.body
+      ]
+    ]
+  }
+
+  // Subsubsection Headings (Level 4)
+  // Matches dcthesis.cls lines 249-254 (run-in style)
+  // Uses block() to prevent first-line-indent on following paragraph (from CogSci pattern)
+  show heading.where(level: 4): it => {
+    v(2.5em, weak: true)
+    (
+      block(above: 0pt, below: 0pt)
+        + text(
+          weight: "bold",
+          style: "italic",
+          it.body + [. ] + h(0.5em, weak: false),
+        )
+    )
+  }
+
+  show heading.where(level: 5): it => {
+    v(0.6em, weak: true)
+    (
+      block(above: 0pt, below: 0pt)
+        + text(
+          weight: "bold",
+          // style: "italic",
+          it.body + [. ] + h(0.5em, weak: false),
+        )
+    )
+  }
+
+  // Figure caption styling
+  set figure(
+    numbering: n => context {
+      let chapter = counter(heading).get().first()
+      [#chapter.#n]
+    },
+    // supplement: [Fig.],
+  )
+  set figure.caption(separator: [ #sym.bar.v ])
+  show figure: set block(breakable: true) // allow figure captions to break across pages
+  // Helper: bold the first sentence of caption body (split on first ". ")
+  // If the body already starts with #strong[...], it's left as-is.
+  let bold-first-sentence(body) = {
+    let children = if body.has("children") { body.children } else { (body,) }
+
+    // If first non-space child is already strong, body is pre-formatted
+    let first = children.find(c => c.func() != [ ].func())
+    if first != none and first.func() == strong {
+      return emph(body)
+    }
+
+    // Find first ". " in text children and split there
+    let before = ()
+    let after = ()
+    let found = false
+
+    for child in children {
+      if found {
+        after.push(child)
+      } else if child.has("text") and child.text.contains(regex("\.\s")) {
+        let t = child.text
+        let m = t.match(regex("\.\s"))
+        before.push(text(t.slice(0, m.start + 1)))
+        after.push(text(t.slice(m.start + 1)))
+        found = true
+      } else {
+        before.push(child)
+      }
+    }
+
+    if found {
+      emph(strong(before.join()))
+      emph(after.join())
+    } else {
+      // Single sentence — make entire caption bold italic
+      emph(strong(body))
+    }
+  }
+
+  show figure.caption: it => {
+    set text(size: 11pt) // 2pt smaller than 12pt body
+    set par(
+      leading: calc-leading(11pt, 18pt), // single spacing
+      justify: true,
+    )
+    set align(left)
+    strong[#it.supplement #it.counter.display(it.numbering)]
+    it.separator
+    bold-first-sentence(it.body)
+  }
+  show figure.where(
+    kind: table,
+  ): set figure.caption(position: top)
+  // Prevent page break between table caption and table body,
+  // while still allowing the table itself to break across pages.
+  // Add 1em vertical padding around table figures.
+  show figure.where(kind: table): it => block(
+    breakable: true,
+    above: 1em,
+    below: 1em,
+  )[
+    #block(sticky: true)[#it.caption]
+    #it.body
+  ]
+  show table: it => {
+    set par(justify: false)
+    it
+  }
+
+
+  title-page(
+    thesis-title: thesis-title,
+    author: author,
+    degree: degree,
+    field: field,
+    date: date,
+    school: school,
+    university: university,
+    location: location,
+    advisor: advisor,
+    examiner-1: examiner-1,
+    examiner-2: examiner-2,
+    examiner-3: examiner-3,
+    dean: dean,
+    dean-title: dean-title,
+    variant: variant,
+    copyright: copyright,
+  )
 
   // Copyright page (if requested)
   // Normalize copyright: none, false, or empty dict all mean "no copyright page"
@@ -666,7 +861,7 @@
     )
   }
 
-  counter(page).update(2) // Start at ii (title page is i)
+  // counter(page).update(2) // Start at ii (title page is i)
 
   body
 }
@@ -700,58 +895,85 @@
 ///
 /// -> content
 #let mainmatter(body) = {
+  let debug-overlay = none
+  // Configure page background if debug overlay is enabled
+  let page-background = if x-target == "pdf" and debug-overlay != none {
+    place(
+      top + left,
+      dx: 0pt,
+      dy: 0pt,
+      image("/utils/margins.png", width: 100%, height: 100%, fit: "stretch", page: 1),
+    )
+  } else {
+    none
+  }
   set page(
+    background: page-background, // DEBUGGING
     header: context {
+      let current-page = here().page()
+
       // LaTeX book class uses \thispagestyle{plain} on chapter pages
       // (no header, just footer). Check if this specific page has a chapter heading.
-      let dominated-headings = query(heading.where(level: 1)).filter(h => h.location().page() == here().page())
-      if dominated-headings.len() > 0 {
+      let chapter-on-page = query(heading.where(level: 1)).filter(h => h.location().page() == current-page)
+      if chapter-on-page.len() > 0 {
         return none
       }
 
-      // Get chapter from state
-      let chap = chapter-state.get()
+      // Find the current chapter (most recent level 1 heading)
+      let all-chapters = query(heading.where(level: 1)).filter(h => h.location().page() <= current-page)
+      let current-chapter = if all-chapters.len() > 0 { all-chapters.last() } else { none }
 
-      // Query for first section on this page (like LaTeX \rightmark)
-      let sections-on-page = query(heading.where(level: 2)).filter(h => h.location().page() == here().page())
-      let sect = if sections-on-page.len() > 0 {
-        let s = sections-on-page.first()
-        let nums = counter(heading).at(s.location())
-        let num = nums.slice(0, calc.min(2, nums.len())).map(str).join(".")
-        // Check for short title in dictionary
-        let key = repr(s.body)
-        let shorts = short-titles.get()
-        let title = if key in shorts { upper(shorts.at(key)) } else { upper(s.body) }
-        [#num#h(1em)#title]
+      // Get short titles dictionary
+      let shorts = short-titles.get()
+
+      // Find the most recent numbered level 2 heading within the current chapter
+      let sect = if current-chapter != none {
+        let chapter-loc = current-chapter.location()
+        let all-sections = query(heading.where(level: 2)).filter(h => (
+          h.location().page() <= current-page and h.location().page() >= chapter-loc.page() and h.numbering != none
+        ))
+        if all-sections.len() > 0 {
+          let s = all-sections.last()
+          let nums = counter(heading).at(s.location())
+          let num = nums.slice(0, calc.min(2, nums.len())).map(str).join(".")
+          // Use short title if available, otherwise full title
+          let key = repr(s.body)
+          let title = if key in shorts { shorts.at(key) } else { s.body }
+          [#num#h(1em)#upper(title)]
+        } else {
+          none
+        }
       } else {
-        section-state.get()
+        none
+      }
+
+      // Fall back to chapter if no section in current chapter
+      let chap = if sect == none and current-chapter != none {
+        let c = current-chapter
+        // Use short title if available, otherwise full title
+        let key = repr(c.body)
+        let title = if key in shorts { shorts.at(key) } else { c.body }
+        if type(c.numbering) == function {
+          [#upper(counter(heading).at(c.location()).map(str).join("."))#h(1em)#upper(title)]
+        } else {
+          [CHAPTER #counter(heading).at(c.location()).first()#h(1em)#upper(title)]
+        }
+      } else {
+        none
       }
 
       // Build header content
-      // Left: \rightmark (section) - "N.N  TITLE" in small caps
-      // Right: \leftmark (chapter) - "CHAPTER N.  TITLE" in small caps (only if no section)
       let left-mark = if sect != none {
         smallcaps[#sect]
-      } else { [] }
-
-      // Show chapter only if no section (to reduce overlap)
-      let right-mark = if sect == none and chap != none {
+      } else if chap != none {
         smallcaps[#chap]
       } else { [] }
 
       // Header with rule (matches \headrulewidth{.1pt})
-      // Font: \sffamily\sc = sans-serif small caps, normal size (12pt)
-      // Use place() to absolutely position left/right marks - avoids wrapping issues
-      block(
-        width: 100%,
-        height: 1em,
-        stroke: (bottom: 0.1pt),
-        inset: (bottom: 2pt),
-      )[
-        #set text(font: "New Computer Modern Sans", size: 12pt)
-        #place(left + horizon)[#left-mark]
-        #place(right + horizon)[#right-mark]
-      ]
+      // Note: Use #short[...] before headings to provide shorter titles for headers
+      set text(font: "New Computer Modern Sans", size: 12pt, top-edge: "ascender", bottom-edge: "descender")
+      block(height: 1.2em, width: 100%, clip: true, below: 2pt, above: 0pt, align(top + left, left-mark))
+      line(length: 100%, stroke: 0.1pt)
     },
     footer: align(center, context counter(page).display("1")),
     numbering: "1",
@@ -780,18 +1002,22 @@
 #let backmatter(body) = {
   set page(
     header: context {
+      let current-page = here().page()
+
       // LaTeX book class uses \thispagestyle{plain} on chapter pages
-      let chapter-on-page = query(heading.where(level: 1)).filter(h => h.location().page() == here().page())
+      let chapter-on-page = query(heading.where(level: 1)).filter(h => h.location().page() == current-page)
       if chapter-on-page.len() > 0 {
         return none
       }
 
-      let chap = chapter-state.get()
-      if chap == none {
+      // Find the most recent level 1 heading on or before this page
+      let all-chapters = query(heading.where(level: 1)).filter(h => h.location().page() <= current-page)
+      if all-chapters.len() == 0 {
         return none
       }
 
-      let right-mark = smallcaps[#chap]
+      let c = all-chapters.last()
+      let right-mark = smallcaps[#upper(c.body)]
 
       // Header with rule (matches \headrulewidth{.1pt})
       // Use place() for consistent positioning
@@ -813,11 +1039,7 @@
   set heading(numbering: none)
 
   // Unnumbered chapter headings for back matter (matches LaTeX \chapter*)
-  // Updates chapter-state to just the title (no "CHAPTER N" prefix)
   let backmatter-heading(it) = {
-    // Update chapter state to just the uppercased title
-    chapter-state.update(upper(it.body))
-
     pagebreak(weak: true)
     v(90pt) // Match frontmatter positioning
 
@@ -866,6 +1088,8 @@
 /// -> content
 #let appendices(body) = {
   counter(heading).update(0)
+  counter(figure.where(kind: image)).update(0)
+  counter(figure.where(kind: table)).update(0)
   counter("appendices").update(1)
 
   set heading(
@@ -879,5 +1103,38 @@
       }
     },
   )
+
+  // Override figure numbering: sequential (1, 2, 3...) instead of chapter-prefixed (A.1)
+  // Use "Supplementary Figure" / "Supplementary Table" as supplement labels
+  set figure(numbering: "1", supplement: [Supplementary Figure])
+  show figure.where(kind: table): set figure(supplement: [Supplementary Table])
+
+  /*
+  This causes the layout to not converge.
+  The show-figure rule reads and updates `after-heading` state inside `context`, creating a layout feedback loop.
+  */
+  // COMMENTED OUT: causes "layout did not converge" warning.
+  // The show-figure rule reads and updates `after-heading` state inside `context`,
+  // creating a layout feedback loop. See _memories/convergence-warning-after-heading-state.md
+  //
+  let after-heading = state("after-heading", false)
+
+  show heading.where(level: 2): it => {
+    pagebreak(weak: true)
+    after-heading.update(true)
+    it
+  }
+
+  show figure: it => {
+    context {
+      if after-heading.get() {
+        after-heading.update(false)
+      } else {
+        pagebreak(weak: true)
+      }
+    }
+    it
+  }
+
   [#pagebreak() #body]
 }

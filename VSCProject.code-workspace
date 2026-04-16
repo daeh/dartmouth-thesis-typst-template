@@ -6,6 +6,28 @@
   ],
   "settings": {
     "window.title": "Dartmouth Thesis Template (Typst)",
+    "extensions.ignoreRecommendations": false,
+    "editor.formatOnSave": true,
+    "editor.quickSuggestions": {
+      "other": false,
+      "comments": false,
+      "strings": false,
+    },
+    "editor.suggestOnTriggerCharacters": false,
+    "editor.inlineSuggest.edits.showLongDistanceHint": false,
+    "editor.inlineSuggest.enabled": false,
+    "editor.inlineSuggest.experimental.emptyResponseInformation": false,
+    "editor.inlineSuggest.suppressSuggestions": true,
+    "explorer.expandSingleFolderWorkspaces": true,
+    "chat.disableAIFeatures": false,
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "github.copilot.chat.agent.autoFix": false,
+    "github.copilot.chat.agent.currentEditorContext.enabled": false,
+    "github.copilot.chat.cloudAgent.enabled": false,
+    "github.copilot.chat.codeGeneration.useInstructionFiles": false,
+    "github.copilot.enable": {
+      "*": false,
+    },
     "[typst][typst-code][typst-markdown-injection]": {
       "editor.defaultFormatter": "myriad-dreamin.tinymist"
     },
